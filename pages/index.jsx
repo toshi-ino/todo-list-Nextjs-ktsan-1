@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useRecoilState } from "recoil";
+import { todoState } from "../components/atoms";
 
-function App() {
 
+
+const App = () => {
+  
   const router = useRouter();
 
   // Todoリストのstateを定義
   const [todos, setTodos] = useState([]);
 
   // 新規Todoのstateを定義
-  const [todoTitle, setTodoTitle] = useState("");
-
-  // 新しく作成するtodoに持たせるidをstateで管理
-  // const [todoIds, setTodoIds] = useState();
+  const [todoTitle, setTodoTitle] = useState();
 
   // 編集画面に切り替えるためのstateを定義
   const [isEditable, setIsEditable] = useState(false);
@@ -34,6 +35,7 @@ function App() {
 
   const [inputId, setInputId] = useState(0);
 
+
   // input入力時にstateが更新される処理
   const handleAddFormChanges = (e) => {
     setTodoTitle(e.target.value);
@@ -46,6 +48,7 @@ function App() {
 
   // ボタンを押すと新しいtodoがtodoリストに追加される
   const handleAddTodo = (todoTitle) => {
+    
     console.log("todoTitle = ", todoTitle);
     if (todoTitle === "") return;
     setTodos([
@@ -55,9 +58,12 @@ function App() {
         title: todoTitle,
         date: newDate,
         status: "notStarted",
+        
       },
+      
     ]);
     
+    {router.query.title}
     setTodoTitle("");
     setNewDate("");
     
@@ -75,7 +81,6 @@ function App() {
     setEditId(todo.id);
     // 編集対象のtodoタイトルをinputに表示
     setNewTitle(todo.title);
-
   };
 
   // 通常画面に切り替わる
@@ -162,6 +167,13 @@ function App() {
     }
   };
 
+  
+
+
+
+
+  
+
   return (
     <>
 
@@ -201,7 +213,7 @@ function App() {
                 value={todoTitle}
                 onChange={handleAddFormChanges}
               />
-              <button className="add-button" onClick={() => handleAddTodo(todoTitle)}>追加</button>
+              <Link href="/create"><button className="add-button" onClick={() => handleAddTodo(todoTitle)}>追加</button></Link>
               <label className="date-limit">
                 <span className="limit-text">期限: </span><input type="date" onChange={handleDateChanges} />
               </label>
@@ -264,7 +276,7 @@ function App() {
               <option value="inProgress">作業中</option>
               <option value="done">完了</option>
             </select>
-            <Link href="/edit"><button className="edit-button" 
+            <Link href={{ pathname: "/edit", query: { title: todo.title } }}><button className="edit-button" 
             onClick={() => handleOpenEditForm(todo) }
             >  
               編集</button></Link>

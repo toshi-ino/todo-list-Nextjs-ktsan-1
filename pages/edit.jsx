@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import {userState} from "../components/atoms"
 
 function Edit () {
+
 
   const router = useRouter(); 
 
@@ -14,7 +16,7 @@ function Edit () {
   const [editId, setEditId] = useState("");
 
   // 新しいタイトルのstateを定義
-  const [newTitle, setNewTitle] = useState("");
+  const [newTitle, setNewTitle] = useState(router.query.title);
 
     // 編集画面に切り替わる
     const handleOpenEditForm = (todo) => {
@@ -39,7 +41,6 @@ function Edit () {
     setTodos(newArray);
     setNewTitle("");
     setEditId();
-    router.push("/")
   };
 
   const handleStatusChange = (targetTodo, e) => {
@@ -61,8 +62,9 @@ function Edit () {
           placeholder="Todoを編集"
           value={newTitle}
           onChange={handleEditFormChange}
+          
         />
-        <Link href="/"><button 
+        <Link href={{ pathname: "/", query: { title: newTitle } }}><button 
         className="editsave-button"
         onClick={handleEditTodo}>編集を保存</button></Link>
         <Link href="/"><button 
