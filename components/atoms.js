@@ -5,12 +5,13 @@ const { persistAtom } = recoilPersist();
 
 export const todoState = atom({
   key: "todo",
-  default: {
-    id: null,
-    title: "",
-    date: "",
-    status: "",
-  },
-  effects_UNSTABLE: [persistAtom],
+  default: [],
+  // default: {
+  //   id: null,
+  //   title: "",
+  //   date: "",
+  //   status: "",
+  // },
+  // effects_UNSTABLE: [persistAtom],
 
 });

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
+import { useRecoilState } from "recoil";
+import { todoState } from "../components/atoms";
 import Link from "next/link";
 
-
+// 修正済み（22.7.24）
 const Create = () => {
 
-  const [todos, setTodos] = useState([]);
   const [todoTitle, setTodoTitle] = useState("");
   const [newDate, setNewDate] = useState("");
-  const [filter, setFilter] = useState("all");
-
+  const [recoilTodos, setRecoilTodos] = useRecoilState(todoState)
   // input入力時にstateが更新される処理
   const handleAddFormChanges = (e) => {
     setTodoTitle(e.target.value);
@@ -22,62 +22,40 @@ const Create = () => {
   const handleAddTodo = (todoTitle) => {
     console.log("todoTitle = ", todoTitle);
     if (todoTitle === "") return;
-    setTodos([
-      ...todos,
+    // 新規のtodoはRecoilにセットしました
+    setRecoilTodos([
+      ...recoilTodos,
       {
-        id: Number(todos.length + 1),
+        id: Number(recoilTodos.length + 1),
         title: todoTitle,
         date: newDate,
         status: "notStarted",
       },
-      
-    ]);
-    
+    ]
+    );
     setTodoTitle("");
     setNewDate("");
-    
   };
-
-
-
   return (
     <>
-
     <div className="input-area">
-              <input
-                type="text"
-                label="タイトル"
-                placeholder="Todoを入力"
-                className="input"
-                value={todoTitle}
-                onChange={handleAddFormChanges}
-              />
-              <Link href={{ pathname: "/", query: { title: todos  } }}><button className="add-button" onClick={() => handleAddTodo(todoTitle)}>保存</button></Link>
-              <label className="date-limit">
-                <span className="limit-text">期限: </span><input type="date" onChange={handleDateChanges} />
-              </label>
-              <select
-            className="status-filter" 
-            value={filter} 
-            onChange={(e) => setFilter(e.target.value)}>
-              <option value="all">すべて</option>
-              <option value="notStarted">未着手</option>
-              <option value="inProgress">作業中</option>
-              <option value="done">完了</option>
-            </select>
-      </div>
+      <input
+        type="text"
+        label="タイトル"
+        placeholder="Todoを入力"
+        className="input"
+        value={todoTitle}
+        onChange={handleAddFormChanges}
+      />
+      <label className="date-limit">
+        <span className="limit-text">期限: </span><input type="date" onChange={handleDateChanges} />
+      </label>
+      <Link href={{ pathname: "/", query: { title: recoilTodos  } }}>
+        <button className="add-button" onClick={() => handleAddTodo(todoTitle)}>保存</button>
+      </Link>
 
-
-</>
-      
-
-
-
-
-
+    </div>
+    </>
   )
-
-
 }
-
 export default Create;

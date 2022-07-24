@@ -13,18 +13,6 @@ const App = () => {
   // Todoリストのstateを定義
   const [todos, setTodos] = useState([]);
 
-  // 新規Todoのstateを定義
-  const [todoTitle, setTodoTitle] = useState();
-
-  // 編集画面に切り替えるためのstateを定義
-  const [isEditable, setIsEditable] = useState(false);
-
-  // 編集したいtodoのidの状態を定義
-  const [editId, setEditId] = useState("");
-
-  // 新しいタイトルのstateを定義
-  const [newTitle, setNewTitle] = useState("");
-
   const [newDate, setNewDate] = useState("");
 
   // フィルターのstateを定義
@@ -35,82 +23,31 @@ const App = () => {
 
   const [inputId, setInputId] = useState(0);
 
-
-  // input入力時にstateが更新される処理
-  const handleAddFormChanges = (e) => {
-    setTodoTitle(e.target.value);
-  };
+  const [recoilTodos, setRecoilTodos] = useRecoilState(todoState)
 
   // 期限の更新
   const handleDateChanges = (e) => {
     setNewDate(e.target.value);
   };
 
-  // ボタンを押すと新しいtodoがtodoリストに追加される
-  const handleAddTodo = (todoTitle) => {
-    
-    console.log("todoTitle = ", todoTitle);
-    if (todoTitle === "") return;
-    setTodos([
-      ...todos,
-      {
-        id: Number(todos.length + 1),
-        title: todoTitle,
-        date: newDate,
-        status: "notStarted",
-        
-      },
-      
-    ]);
-    
-    {router.query.title}
-    setTodoTitle("");
-    setNewDate("");
-    
-  };
-
   // 対象のtodoをリストから削除
+  // 修正済み（22.7.24）
   const handleDeleteTodo = (targetTodo) => {
-    setTodos(todos.filter((todo) => todo !== targetTodo));
+    const filteredtodos = recoilTodos.filter((todo) => todo !== targetTodo)
+    setRecoilTodos(filteredtodos);
+    setFilteredTodos(filteredtodos)
   };
 
-  // 編集画面に切り替わる
-  const handleOpenEditForm = (todo) => {
-    setIsEditable(true);
-    // idのstateを更新
-    setEditId(todo.id);
-    // 編集対象のtodoタイトルをinputに表示
-    setNewTitle(todo.title);
-  };
-
-  // 通常画面に切り替わる
-  const handleCloseEditForm = () => {
-    setIsEditable(false);
-    setEditId("");
-  };
-
-  // 編集用inputの入力値に応じてstateを更新
-  const handleEditFormChange = (e) => {
-    setNewTitle(e.target.value);
-  };
-
-  // 編集内容をtodoリストの配列に加える
-  const handleEditTodo = () => {
-    const newArray = todos.map((todo) =>
-      todo.id === editId ? { ...todo, title: newTitle } : todo
-    );
-    setTodos(newArray);
-    setNewTitle("");
-    setEditId();
-    handleCloseEditForm();
-  };
   // 対象のtodoのステータスを更新した、新しいTodoリストの配列を作成
+  // 修正済み（22.7.24）
   const handleStatusChange = (targetTodo, e) => {
-    const newArray = todos.map((todo) =>
+    const newArray = recoilTodos.map((todo) =>
       todo.id === targetTodo.id ? { ...todo, status: e.target.value } : todo
     );
-    setTodos(newArray);
+    setRecoilTodos(newArray);
+    setFilteredTodos(newArray)
   };
+
 
   const filterTodoByDate = (selectedDate) => {
     if (selectedDate === "all") {
@@ -125,34 +62,34 @@ const App = () => {
       setFilteredTodos(fTodos);
     }
   };
-
+  
+  // 修正済み（22.7.24）
   useEffect(() => {
     const filteringTodos = () => {
       switch (filter) {
         case "notStarted":
           setFilteredTodos(
-            todos.filter((todo) => todo.status === "notStarted")
+            recoilTodos.filter((todo) => todo.status === "notStarted")
           );
           break;
 
         case "inProgress":
           setFilteredTodos(
-            todos.filter((todo) => todo.status === "inProgress")
+            recoilTodos.filter((todo) => todo.status === "inProgress")
           );
           break;
         case "done":
-          setFilteredTodos(todos.filter((todo) => todo.status === "done"));
+          setFilteredTodos(recoilTodos.filter((todo) => todo.status === "done"));
           break;
 
         default:
-          setFilteredTodos(todos);
+          setFilteredTodos(recoilTodos);
       }
     };
     filteringTodos();
-  }, [filter, todos]);
+  }, [filter, recoilTodos]);
 
   const filterTodoById = (id) => {
-    console.log("id =", id);
     if (id === "") {
       setFilteredTodos(todos);
     } else {
@@ -167,126 +104,97 @@ const App = () => {
     }
   };
 
-  
+  // Todo-Listの画面に移動してきたときに表示用のtodos(filteredTodos)にRecoilのtodosをセットします
+  useEffect(()=> {
+    setFilteredTodos(recoilTodos)
+  },[])
 
-
-
-
-  
-
-  return (
-    <>
-
-      {isEditable ? (
-        <>
-        <div className="title">
-        <p>Todoの編集</p>
-        </div>
-          <div className="edit-area">
-            <input
-              type="text"
-              label="新しいタイトル"
-              placeholder="Todoを編集"
-              value={newTitle}
-              onChange={handleEditFormChange}
-            />
-            <button 
-            className="editsave-button"
-            onClick={handleEditTodo}>編集を保存</button>
-            <button 
-            className="cancel-button"
-            onClick={handleCloseEditForm}>キャンセル</button>
-          </div>
-        </>
-      ) : (
-        <>
-      <div>
-          <div className="title">
+return (
+  <>
+    <div>
+      <div className="title">
         <p>Todo-List</p>
       </div>
-            <div className="input-area">
-              <input
-                type="text"
-                label="タイトル"
-                placeholder="Todoを入力"
-                className="input"
-                value={todoTitle}
-                onChange={handleAddFormChanges}
-              />
-              <Link href="/create"><button className="add-button" onClick={() => handleAddTodo(todoTitle)}>追加</button></Link>
-              <label className="date-limit">
-                <span className="limit-text">期限: </span><input type="date" onChange={handleDateChanges} />
-              </label>
-            </div>
-            
-            <div className="filter-area">
-            <input
-              type="text"
-              label="フィルタid"
-              placeholder="数値を入力 空文字で解除"
-              value={inputId}
-              onChange={(e) => setInputId(e.target.value)}
-            />
-            <button onClick={() => filterTodoById(inputId)}>
-              idでフィルタ
-            </button>
 
-            <select 
-              className = "date-limitfilter"
-              onChange={(e) => filterTodoByDate(e.target.value)}>
-              <option hidden>選択してください </option>
-              <option value={"all"}>解除</option>
-              {todos.map(
-                (todo, index) =>
-                  todo.date && (
-                    <option value={todo.date} key={index}>
-                      {todo.date}
-                    </option>
-                  )
-              )}
-            </select>
+      <div className="input-area">
+        <Link href="/create"><button className="add-button" >追加</button></Link>
+      </div>
+          
+      <div className="filter-area">
+        <input
+          type="text"
+          label="フィルタid"
+          placeholder="数値を入力 空文字で解除"
+          value={inputId}
+          onChange={(e) => setInputId(e.target.value)}
+        />
+        <button onClick={() => filterTodoById(inputId)}>
+          idでフィルタ
+        </button>
 
-            <select
-            className="status-filter" 
-            value={filter} 
-            onChange={(e) => setFilter(e.target.value)}>
-              <option value="all">すべて</option>
-              <option value="notStarted">未着手</option>
-              <option value="inProgress">作業中</option>
-              <option value="done">完了</option>
-            </select>
-            </div>
-          </div>
-        </>
-      )}
-      {/* 状態 */}
-      <div className="todo-area">
-      <ul>
-        {filteredTodos.map((todo) => (
-          <li className="list-row" key={todo.id}>
-            <span className="id-text">ID:{todo.id} </span>
-            <span className="title-text">{todo.title}</span>
-            <span className="date-text">期限:{todo.date}</span>
-            <select
-              className="status-box"
-              value={todo.status}
-              onChange={(e) => handleStatusChange(todo, e)}
-            >
-              <option value="notStarted">未着手</option>
-              <option value="inProgress">作業中</option>
-              <option value="done">完了</option>
-            </select>
-            <Link href={{ pathname: "/edit", query: { title: todo.title } }}><button className="edit-button" 
-            onClick={() => handleOpenEditForm(todo) }
-            >  
-              編集</button></Link>
-            <button className="delete-button" onClick={() => handleDeleteTodo(todo)}>削除</button>
-          </li>
-        ))}
-      </ul>
+        <select 
+          className = "date-limitfilter"
+          onChange={(e) => filterTodoByDate(e.target.value)}>
+          <option hidden>選択してください </option>
+          <option value={"all"}>解除</option>
+          {todos.map(
+            (todo, index) =>
+              todo.date && (
+                <option value={todo.date} key={index}>
+                  {todo.date}
+                </option>
+              )
+          )}
+        </select>
+
+        <select
+        className="status-filter"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">すべて</option>
+          <option value="notStarted">未着手</option>
+          <option value="inProgress">作業中</option>
+          <option value="done">完了</option>
+        </select>
+      </div>
     </div>
-      
-    </>
+
+    {/* 状態 */}
+    <div className="todo-area">
+
+      { !filteredTodos.length ?
+          <p>
+            todoが登録されていません
+          </p>
+        :
+          <ul>
+            { filteredTodos?.map((todo) => (
+              <li className="list-row" key={todo.id}>
+                <span className="id-text">ID:{todo.id} </span>
+                <span className="title-text">{todo.title}</span>
+                <span className="date-text">期限:{todo.date}</span>
+                <select
+                  className="status-box"
+                  value={todo.status}
+                  onChange={(e) => handleStatusChange(todo, e)}
+                >
+                  <option value="notStarted">未着手</option>
+                  <option value="inProgress">作業中</option>
+                  <option value="done">完了</option>
+                </select>
+
+                <Link href={{ pathname: "/edit", query: { title: todo.title, id: todo.id } }}>
+                  <button className="edit-button">編集</button>
+                </Link>
+
+                <button className="delete-button" onClick={() => handleDeleteTodo(todo)}>削除</button>
+              </li>
+              ))
+            }
+          </ul>
+      }
+    </div>
+  </>
   );
 }
 
